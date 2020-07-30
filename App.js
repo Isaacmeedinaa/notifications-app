@@ -4,6 +4,14 @@ import { StyleSheet, Button, View, Alert } from "react-native";
 import * as Permissions from "expo-permissions";
 import * as Notifications from "expo-notifications";
 
+Notifications.setNotificationHandler({
+  handleNotification: async () => {
+    return {
+      shouldShowAlert: true,
+    };
+  },
+});
+
 export default function App() {
   useEffect(() => {
     Permissions.getAsync(Permissions.NOTIFICATIONS)
@@ -20,11 +28,33 @@ export default function App() {
       });
   }, []);
 
+  useEffect(() => {
+    const bgSubscription = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        // you can navigate to another screen here
+        console.log(response);
+      }
+    );
+
+    const fgSubscription = Notifications.addNotificationReceivedListener(
+      (notification) => {
+        // you can navigate to another screen here
+        console.log(notification);
+      }
+    );
+
+    return () => {
+      bgSubscription.remove();
+      fgSubscription.remove();
+    };
+  }, []);
+
   const triggerNotificationHandler = () => {
     Notifications.scheduleNotificationAsync({
       content: {
         title: "My first local notification",
         body: "This is the first local notification we are sending",
+        data: { mySpecialData: "Some Data" },
       },
       trigger: {
         seconds: 10,
